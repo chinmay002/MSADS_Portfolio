@@ -20,11 +20,13 @@ The Applied Data Science program at Syracuse University's School of Information 
 3. Referenced Course Projects and Assignments
     * [IST 659: Database Administration](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20659%20Database%20Administration)
     
-    * [IST 664: Natural Language Processing https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20664%20Natural%20Language%20Processing 
+    * [IST 664: Natural Language Processing](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20664%20Natural%20Language%20Processing)
     
-    * [IST 736: Text Mining](https://github.com/SLPeoples/MSADS_Portfolio/tree/master/IST736_TextMining)
+    * [IST 687: Intro to Data Science](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20687%20Intro%20to%20Data%20Science)
    
-    * [MAR 653: Marketing Analytics](https://github.com/SLPeoples/MSADS_Portfolio/tree/master/MAR653_Marketing_Analytics)
+    * [MAR 707: Applied Machine Learning ](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20707%20Applied%20Machine%20Learning)
+    
+    * [MAR 736: Text Mining ](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20736%20Text%20Mining)
   
 4. [Portfolio Presentation](https://github.com/SLPeoples/MSADS_Portfolio/blob/master/SamuelPeoplesPortfolioPresentation.mp4)
     - Video file presenting the Portfolio Milestone
