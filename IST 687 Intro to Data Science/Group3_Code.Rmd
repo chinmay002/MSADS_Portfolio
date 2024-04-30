@@ -1,0 +1,449 @@
+---
+title: "Project"
+output:
+  pdf_document: default
+  html_document: default
+date: "2022-12-07"
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+install.packages("ggpubr")
+library("ggpubr")
+#install.packages("gridExtra")
+library(gridExtra)
+#install.packages("imputeTS")
+library(imputeTS)
+#install.packages('e1071')
+#install.packages("rpart.plot")
+library(e1071)
+library(rpart)
+library(rpart.plot)
+#install.packages("rio")
+#install.packages("caret")
+#install.packages("kernlab")
+#install.packages("rlang")
+library(rio)
+library(caret)
+library(kernlab)
+library(rlang)
+```
+
+```{r}
+df <- read.csv("https://intro-datascience.s3.us-east-2.amazonaws.com/HMO_data.csv")
+```
+
+```{r}
+head(df)
+```
+
+```{r}
+dim(df)
+# We have 7582 rows and 14 columns
+```
+
+```{r}
+summary(df)
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+# Checking for null values
+colSums(sapply(df,is.na))
+
+# We have 78 null values in BMI and 80 in hypertension.
+```
+
+```{r}
+#See all rows with atleat one null value
+#Also we do not have NA values in same row for both hypertension and bmi, it's either null for bmi or hypertension
+df %>% filter(if_any(everything(),is.na))
+```
+
+```{r}
+# Add new column Expensive or not where cost is more than 4775
+df <-df %>% mutate(target=if_else(cost>4775,'expensive','not_expensive'))
+```
+
+```{r}
+head(df)
+```
+
+```{r}
+#lets find the distribution of each variable,especially the numeric values
+p1<-ggplot(df,aes(x=age))+geom_histogram(bins=10)+ggtitle('age column distribution')
+
+
+p2<- ggplot(df,aes(x=target,y=age))+geom_boxplot(fill='cyan')+ggtitle('target vs age')
+ggarrange(plotlist=list(p1,p2),ncol = 2,nrow=1)
+
+# People under 20 are more in count, followed by 20-25 and 45-55, least data is from people of age 65-70
+# As seen below, aged people have more medical expense than young ones. Mean age of expensive is around 57 and non_exp is 36
+```
+
+```{r}
+p1<-ggplot(df,aes(x=bmi))+geom_histogram(bins=8,fill='grey')+ggtitle('BMI column distribution')
+
+
+p2<- ggplot(df,aes(x=target,y=bmi))+geom_boxplot(fill='pink')+ggtitle('target vs bmi')
+ggarrange(plotlist=list(p1,p2),ncol = 2,nrow=1)
+
+# Its a normal distribiution. Mean BMI is 30, which according to study is obesity zone. Indicating more people in data are obese.
+# Probably obese people have higher medical expense. mean is 33 , whereas non_exp its is almost 30.
+```
+
+```{r}
+hist(df$cost,main='distribution of cost column',col='black',xlab='COST')
+
+# Target variable is highly skewed. we have mean of 4043 and 3rd quant 4775 and max  55715.
+# we need to convert this variable into categorical as expensive or non_expensive.
+# going with data we are considering not_expensive till 3rd quartile and above that its expensive.ie(>4775 its expensive)
+```
+
+```{r}
+p1<-ggplot(df,aes(x=smoker, fill=smoker)) +geom_bar(show.legend = FALSE) +# add percentages on top of bars
+    geom_text(
+        stat='count',
+        aes(label=paste0(round(after_stat(prop*100), digits=1), "%"),group=1),
+        vjust=-0.4,
+        size=4
+    ) 
+
+P <- (prop.table(table(df$smoker,df$target)))
+p2 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("SMOKER"))+xlab('as')
+
+ggarrange(plotlist=list(p1,p2),ncol=2)    
+#80.5% are non_smokers and 70% of them have medical expense less costly. out of 19.5% smoker, 15% have expensive costs.
+#it seems like smoking is related to our target
+```
+
+```{r}
+mytable = round(prop.table(table(df$location_type))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+p1<- pie(mytable, labels = lbls,main="percentage of Location _type present",col=c('blue','cyan'))
+
+P <- as.data.frame(prop.table(table(df$location_type,df$target)))
+
+p2 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")
+
+cowplot::plot_grid(p1,p2)
+```
+
+```{r}
+par(mfrow=c(1,2))
+mytable = round(prop.table(table(df$education_level))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+pie(mytable, labels = lbls,main="percentage of education_level present",col=c('orange','cyan','green','pink'))
+
+
+mytable = round(prop.table(table(df$married))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+pie(mytable, labels = lbls,main="pecwntage of married and not ",col=c('yellow','cyan'))   
+```
+
+```{r}
+figsize <- options(repr.plot.width=10, repr.plot.height=10)
+par(mfrow=c(1,2))
+mytable = round(prop.table(table(df$yearly_physical))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+pie(mytable, labels = lbls,
+   main="percentage of yealry_physical present",col=c('blue','white'))
+
+mytable = round(prop.table(table(df$exercise))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+pie(mytable, labels = lbls,
+   main="percentage of people  exercise",col=c('blue','white'))
+```
+
+```{r}
+mytable = round(prop.table(table(df$gender))*100,2)
+lbls <- paste(names(mytable), "\n", paste(mytable,'%'), sep=" ")
+pie(mytable, labels = lbls,
+   main="percentage of men and women ",col=c('pink','light blue'))   
+```
+
+```{R}
+P <- (prop.table(table(df$smoker,df$target)))
+p1 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("SMOKER"))
+
+P <- (prop.table(table(df$location_type,df$target)))
+p2 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Locatio_Type"))
+
+P <- (prop.table(table(df$education_level,df$target)))
+p3 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Eductaio_level"))
+
+P <- (prop.table(table(df$married,df$target)))
+p4 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Married"))
+
+P <- (prop.table(table(df$yearly_physical,df$target)))
+p5 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("yearly+phisical"))
+
+P <- (prop.table(table(df$exercise,df$target)))
+p6 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("execrise"))
+
+P <- (prop.table(table(df$hypertension,df$target)))
+p6 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("execrise"))
+
+P <- (prop.table(table(df$gender,df$target)))
+p7 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("gender"))+xlab('as')
+
+figsize <- options(repr.plot.width=20, repr.plot.height=16)
+cowplot::plot_grid(p1,p2,p3,p4,p5,p6,p7,ncol = 3,nrow = 3)
+
+
+#out of 75% urban data, 58% have less medical expenses. remainng 25 % country people, 18% have expensive costs
+```
+
+```{r}
+figsize <- options(repr.plot.width=10, repr.plot.height=10)
+p1 <- ggplot(df, aes(x = target,y=age))+geom_boxplot(color="blue",fill="blue",alpha=0.2,notch=TRUE,notchwidth = 0.8,outlier.colour="red",outlier.fill="red",outlier.size=3)+ggtitle('target vs age')
+p2 <- ggplot(df, aes(x = target,y=bmi))+geom_boxplot(color="red",fill="red",alpha=0.2,notch=TRUE,notchwidth = 0.8,outlier.colour="red",outlier.fill="red",outlier.size=3)+ggtitle('target vs bmi')
+cowplot::plot_grid(p1,p2,ncol = 2,nrow = 1)
+```
+
+```{r}
+#what are the top 10 locations particiapting in data
+ggplot(df, aes(x = location)) +geom_bar(fill=c('grey','grey','yellow','grey','grey','red','grey'))
+#Most of data is from Pennsilvania and least data from Massachusets
+```
+
+```{r}
+#for visulaizatiuon purpose, we take cost as target 
+names(df)
+```
+
+```{r}
+p1 <- ggplot(df, aes(x =gender , y=cost)) + geom_boxplot()
+p2 <- ggplot(df, aes(x =location_type , y=cost)) + geom_boxplot()
+p3 <- ggplot(df, aes(x =location , y=cost)) + geom_boxplot()
+p4 <- ggplot(df, aes(x =smoker , y=cost)) + geom_boxplot()
+p5 <- ggplot(df, aes(x =education_level , y=cost)) + geom_boxplot()
+p6 <- ggplot(df, aes(x =married , y=cost)) + geom_boxplot()
+p7 <- ggplot(df, aes(x =yearly_physical , y=cost)) + geom_boxplot()
+p8 <- ggplot(df, aes(x =exercise , y=cost)) + geom_boxplot()
+
+
+figsize <- options(repr.plot.width=20, repr.plot.height=16)
+cowplot::plot_grid(p1,p2,p3,p4,p5,p6,p7,p8,ncol = 4,nrow = 2)
+```
+
+```{r}
+p<-df%>%group_by(gender)%>%summarise(Median =median(cost))
+p1<-ggplot(as.data.frame(p),aes(x=gender,y=Median))+geom_bar(stat="identity", position = "dodge",fill='yellow')+geom_text(aes(label = Median), vjust = 0)
+
+p <-df%>%group_by(smoker)%>%summarise(Median =median(cost))
+p2 <-ggplot(as.data.frame(p),aes(x=smoker,y=Median))+geom_bar(stat="identity", position = "dodge",fill='orange')+geom_text(aes(label = Median), vjust = 0)
+
+p <-df%>%group_by(location_type)%>%summarise(Median =median(cost))
+p3 <-ggplot(as.data.frame(p),aes(x=location_type,y=Median))+geom_bar(stat="identity", position = "dodge",fill='cyan')+geom_text(aes(label = Median), vjust = 0)
+
+
+p <-df%>%group_by(location)%>%summarise(Median =median(cost))
+p4 <-ggplot(as.data.frame(p),aes(x=location,y=Median))+geom_bar(stat="identity", position = "dodge",fill='pink')+geom_text(aes(label = Median), vjust = 0)+coord_flip()
+
+p <-df%>%group_by(married)%>%summarise(Median =median(cost))
+p5 <-ggplot(as.data.frame(p),aes(x=married,y=Median))+geom_bar(stat="identity", position = "dodge",fill='grey')+geom_text(aes(label = Median), vjust = 0)
+
+
+p <-df%>%group_by(children)%>%summarise(Median =median(cost))
+p6 <-ggplot(as.data.frame(p),aes(x=children,y=Median))+geom_bar(stat="identity", position = "dodge",fill='lightblue')+geom_text(aes(label = Median), vjust = 0)
+
+
+p <-df%>%group_by(yearly_physical)%>%summarise(Median =median(cost))
+p7 <-ggplot(as.data.frame(p),aes(x=yearly_physical,y=Median))+geom_bar(stat="identity", position = "dodge",fill='red')+geom_text(aes(label = Median), vjust = 0)
+
+p <-df%>%group_by(exercise)%>%summarise(Median =median(cost))
+p8 <-ggplot(as.data.frame(p),aes(x=exercise,y=Median))+geom_bar(stat="identity", position = "dodge",fill='yellow')+geom_text(aes(label = Median), vjust = 0)
+
+
+figsize <- options(repr.plot.width=20, repr.plot.height=16)
+cowplot::plot_grid(p1,p2,p3,p4,p5,p6,p7,p8,nrow=2,ncol=4)
+```
+
+```{r}
+#why did we choose Median??
+#Since we are considering Cost column, its highly right skewed. so Mean gets easily affected by Skeweness. Hence Median is considered
+
+#Seems Men Median expense is 200$ greater than Female
+#Smokers Median expenses is  almost 4 times  that of Non_Smokers
+#Country and Urban have almost similar medical expense. 
+#From the count graph above, we knew Penn has more count and Massachusets has less. But, Median Medical cost in Massachusetts is 2887$ which is 400$ more than Penn.
+#Seems Massachusetts is costlier to leave(or is it because of aged and more smokers lest check that after).Maryland and Connecticut have low median cost
+
+#Parents with 3 or 4 have median cost of 3226-27$
+#Exercise may stongly relate to cost. Non_Active have to pay almost 3000$ that is 1500$ more than those who exercise
+
+#we can make the same plots of age and bmi by subcategorizing them .for ex: age into --young, elderly and old
+```
+
+```{r}
+df = df%>%mutate(age_cat=case_when(
+                                age>=18 & age<35 ~'Young_adult',
+                                age>=35 & age<50 ~'Seniors_adult',
+                                age>=50  ~'Aged',
+))
+```
+
+```{r}
+#https://www.cdc.gov/obesity/basics/adult-defining.html
+#If your BMI is less than 18.5, it falls within the underweight range.
+#If your BMI is 18.5 to <25, it falls within the healthy weight range.
+#If your BMI is 25.0 to <30, it falls within the overweight range.
+#If your BMI is 30.0 or higher, it falls within the obesity range.
+df = df%>%mutate(bmi_cat=case_when(
+                                bmi<18.5 ~'Underweight',
+                                bmi>=18.5 & bmi<25 ~'Healthy',
+                                bmi>=25 & bmi<30 ~'Overweight',
+                                bmi>30 ~'Obesity'
+))
+```
+
+```{r}
+
+p <-df%>%group_by(age_cat)%>%summarise(Median =median(cost))
+p1 <-ggplot(as.data.frame(p),aes(x=age_cat,y=Median))+geom_bar(stat="identity", position = "dodge",fill='cyan')+geom_text(aes(label = Median), vjust = 0)
+
+p <-df%>%group_by(bmi_cat)%>%summarise(Median =median(cost))
+p2 <-ggplot(as.data.frame(p),aes(x=bmi_cat,y=Median))+geom_bar(stat="identity", position = "dodge",fill='blue')+geom_text(aes(label = Median), vjust = 0)
+
+figsize <- options(repr.plot.width=8, repr.plot.height=8)
+cowplot::plot_grid(p1,p2,nrow=1,ncol=2)
+
+
+#As seen , aged factor and BMI plays a role. Aged person pays higher median cost where as young ones pay as little as 861 dollars
+#3050.5$ is median health cost for Obese people followed by overweight and healthy.  Interestingly, Underweight people pays less into health costs.
+```
+
+```{r}
+P <- (prop.table(table(df$smoker,df$age_cat)))
+p1 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("SMOKER"))
+
+P <- (prop.table(table(df$location,df$age_cat)))
+p2 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Location"))
+
+
+P <- (prop.table(table(df$children,df$age_cat)))
+p3 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Children"))
+
+P <- (prop.table(table(df$exercise,df$age_cat)))
+p4 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("exercise"))
+
+P <- (prop.table(table(df$hypertension,df$age_cat)))
+p5 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("execrise"))
+
+
+figsize <- options(repr.plot.width=20, repr.plot.height=16)
+cowplot::plot_grid(p1,p2,p3,p4,p5,ncol = 3,nrow = 2)
+
+
+#As we saw from previous plots where exercise,location,smoker and children had affect on Median Cost, SO just wanted to explore via age_cat col, if this col is reason for those differences.
+#Guess was more aged people are smoking , More aged might be living in NY and MASSACHUSETTS,May be they have 3 or 4 Children etc. 
+#but since data has more rows about young and middle age we cant be sure of the above guess/hypothesis
+```
+
+```{r}
+P <- (prop.table(table(df$smoker,df$bmi_cat)))
+p1 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("SMOKER"))
+
+P <- (prop.table(table(df$location,df$bmi_cat)))
+p2 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Location"))
+
+
+P <- (prop.table(table(df$children,df$bmi_cat)))
+p3 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("Children"))
+
+P <- (prop.table(table(df$exercise,df$bmi_cat)))
+p4 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("exercise"))
+
+P <- (prop.table(table(df$hypertension,df$bmi_cat)))
+p5 <- ggplot(as.data.frame(P), aes(x = Var2, y = Freq, fill = Var1)) + geom_bar(stat="identity", position = "dodge")+guides(fill=guide_legend("execrise"))
+
+
+figsize <- options(repr.plot.width=20, repr.plot.height=16)
+cowplot::plot_grid(p1,p2,p3,p4,p5,ncol = 3,nrow = 2)
+
+#obese people have more smokers compared to other categories
+#Same with Location, Obese people are more in NY and Massachusetts
+#they stand 1st with 3 children
+#they dont excersie and are not active.
+
+#BMI surely playing a direct role in cost involved.
+```
+
+```{r}
+# Hypertension and BMI have null values. We can use impute to try adding values
+# but that returns values such as 0.5 in BMI which is not possible as that column
+# denotes that the person either has hypertension or not.
+# We are therefore removing those rows from the dataset.
+
+df <- na.omit(df)
+colSums(sapply(df,is.na))
+
+# This results in us removing a total of 158 rows.
+```
+
+```{r}
+# Convert all char columns to factor
+df <- df %>% mutate_if(is.character, as.factor)
+# LM does not accept factor so converted it to numeric
+df <- df %>% mutate_if(is.factor, as.numeric)
+str(df)
+```
+
+```{r}
+lm_out <- lm(data = df, target ~ age+bmi+children+smoker+location_type+education_level+yearly_physical+exercise+
+                                        married+hypertension+gender)
+summary(lm_out)
+```
+
+```{r}
+# Choosing only relevant columns
+df <- data.frame(age = df$age, bmi = df$bmi, children=df$children, smoker=df$smoker, exercise = df$exercise, hypertension=df$hypertension, yearly_physical = df$yearly_physical, target = as.factor(df$target))
+
+trainList <- createDataPartition(y=df$target,p=.75,list=F)
+# Putting 75% data in training and 25% in testing
+training <- df[trainList,]
+testing <- df[-trainList,]
+
+str(df)
+```
+
+
+```{r}
+dim(training)
+dim(testing)
+head(df) #2 is not expensive and 1 is expensive 
+```
+
+```{r}
+csvm <- ksvm(target~age+bmi+children+smoker+exercise+hypertension+yearly_physical, data=training, type = "C-svc", C=4, rob.model = T, cross = 3)
+csvm
+
+
+hist(alpha(csvm)[[1]], main="Support Vector Histogram with C=5", xlab="Support Vector Values")
+```
+```{r}
+svmPred <-predict(csvm,testing)
+confusionMatrix(svmPred,testing$target)
+
+
+trctrl <- trainControl(method = "repeatedcv", number = 10)
+
+
+#Build rpart tree model
+tree_model1 <- train(target~., data = training, method = 'rpart', trControl=trctrl, tuneLength = 10)
+rpart.plot(tree_model1$finalModel)
+
+treePred <- predict(tree_model1, newdata = testing)
+confusionMatrix(treePred, as.factor(testing$target))
+
+varImp(tree_model1)
+
+
+
+```
