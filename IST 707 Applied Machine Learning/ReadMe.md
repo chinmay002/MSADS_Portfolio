@@ -19,12 +19,9 @@
 
 ## Data Pre-Processing:
 The following are the steps I followed to pre-process the data :
-* Remove unwanted fields : The dataset had some fields which was entirely NAN. In addition to that some
-variables are irrelevant for model training. The following fields are omitted : 'echoBuffer',
-'cardLast4Digits','merchantName','accountOpenDate','transactionDateTime','currentExpDate','customerId','dat
-eOfLastAddressChange','accountNumber','enteredCVV','cardCVV'.
-* Adding derived features : In case of a brute-force attempt to crack the card-CVV, incorrect CVV may be
-entered initially. This is an indicator of attempted fraud. So, I am creating a new variable: matchingCVV
+* Remove unwanted fields : The dataset had some fields which was entirely NAN. In addition to that some variables are irrelevant for model training.
+* The following fields are omitted : 'echoBuffer','cardLast4Digits','merchantName','accountOpenDate','transactionDateTime','currentExpDate','customerId','dateOfLastAddressChange','accountNumber','enteredCVV','cardCVV'.
+* Adding derived features : In case of a brute-force attempt to crack the card-CVV, incorrect CVV may be entered initially. This is an indicator of attempted fraud. So, I am creating a new variable: matchingCVV
 which denotes whether the real CVV and entered CVV are same.
 * Boolean variables are converted to binary integer (0:False, 1:True) values.
 * Categorical values are One-Hot encoded.
