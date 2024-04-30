@@ -14,13 +14,13 @@ The Applied Data Science program at Syracuse University's School of Information 
 1. README.md 
     - Overview Document detailing repository contents
 
-2. [SamuelPeoplesPortfolioMilestone.pdf](https://github.com/SLPeoples/MSADS_Portfolio/blob/master/SamuelPeoplesPorfolioMilestone.pdf)
+2. [SamuelPeoplesPortfolioMilestone.pdf](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20659%20Database%20Administration)
     - Written Portfolio Milestone Report
 
 3. Referenced Course Projects and Assignments
     * [IST 659: Database Administration](https://github.com/SLPeoples/MSADS_Portfolio/tree/master/IST659_DatabaseAdministration)
     
-    * [IST 707: Data Analytics](https://github.com/SLPeoples/MSADS_Portfolio/tree/master/IST707_DataAnalytics)
+    * [IST 664: Natural Language Processing https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20664%20Natural%20Language%20Processing 
     
     * [IST 736: Text Mining](https://github.com/SLPeoples/MSADS_Portfolio/tree/master/IST736_TextMining)
    
