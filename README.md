@@ -14,7 +14,7 @@ The Applied Data Science program at Syracuse University's School of Information 
 1. README.md 
     - Overview Document detailing repository contents
 
-2. [SamuelPeoplesPortfolioMilestone.pdf]
+2. [[SamuelPeoplesPortfolioMilestone.pdf](https://github.com/chinmay002/MSADS_Portfolio/blob/main/Portfolio_paper_Chinmay_Maganur.pdf)]
     - Written Portfolio Milestone Report
 
 3. Referenced Course Projects and Assignments
@@ -28,10 +28,8 @@ The Applied Data Science program at Syracuse University's School of Information 
     
     * [MAR 736: Text Mining ](https://github.com/chinmay002/MSADS_Portfolio/tree/main/IST%20736%20Text%20Mining)
   
-4. [Portfolio Presentation](https://github.com/SLPeoples/MSADS_Portfolio/blob/master/SamuelPeoplesPortfolioPresentation.mp4)
+4. [Portfolio Presentation](https://video.syr.edu/media/t/1_hfltpbob)
     - Video file presenting the Portfolio Milestone
-    - [Public Link](https://drive.google.com/file/d/14trGneXIW-ruNCRR72VuDjUuIcvvGWCq/view?usp=sharing)
 
-5. [SamuelPeoplesSlideDeck.pdf](https://github.com/SLPeoples/MSADS_Portfolio/blob/master/SamuelPeoplesSlideDeck.pdf)
-    - Referenced slide deck from presentation
-    - [Public Link](https://docs.google.com/presentation/d/1bqwMwGoYIJwLUIqbyQqR9Gt7lUvXwEGusEO_b0gOHYM/edit?usp=sharing)
+5. Referenced slide deck from presentation PPT[(https://github.com/chinmay002/MSADS_Portfolio/blob/main/ChinmayMaganur_Exit_Req.pptx)]
+   
