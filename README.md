@@ -1,7 +1,7 @@
 # Syracuse University, M.S., Applied Data Science
 ## Chinmay Ashok Maganur
 
-SUID : 3154541019
+SUID : 370801446
 
 email :camaganu@syr.edu , chinmaymaganur0203@gmail.com
 
